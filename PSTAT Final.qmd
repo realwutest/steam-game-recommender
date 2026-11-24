@@ -1,0 +1,560 @@
+---
+title: "Steam Game Recommendation System"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+editor: visual
+execute:
+  warning: false
+  message: false
+---
+
+## Introduction
+
+Our group implemented a collaborative filtering recommender system to generate personalized video game recommendations using a public dataset of user behaviors from Steam, the world's most popular PC gaming hub. After constructing a user-item interaction matrix, we used K-nearest-neighbor style similarity methods with cosine similarity to compare games and users based on collective playtime patterns. Our model aims to achieve two primary objectives: first, to recommend 10 similar games given a specific game title (Item-to-Item), and second, to generate 10 personalized game suggestions for a unique user ID based on their past history while filtering out already-played games (User-to-Item). With Steam's massive collection spanning from AAA blockbusters to small indie titles, developing robust discovery tools is a highly valuable asset for enhancing player engagement. Our group was interested in this project because it allowed us to work with a large-scale behavioral dataset and create a predictive model with practical, real-world applications.
+
+### Data Descriptions
+
+We obtained our behavioral dataset by downloading the public Steam Video Games dataset from Kaggle. The dataset is structurally static, capturing a comprehensive snapshot of digital interactions without requiring real-time API streaming. The dataset consists of exactly 200,000 observations and 4 primary predictors: `user_id`, `game_title`, `behavior`, and `value`. The dataset contains zero missing values.
+
+The variables we are working with represent two distinct data types.
+
+**Categorical Variables** `user_id` (the unique identifier for each user), `game_title` (the name of the Steam game), and `behavior` (the type of user interaction, classified as either 'purchase' or 'play').
+
+**Numeric Variable** `value`, which represents the degree to which the behavior was performed (a binary 1.0 for 'purchase', or a continuous measure of play-hours for 'play').
+
+Notably, the raw CSV file lacks a predefined header row. To prevent any data loss or structural misinterpretation during data ingestion, we will explicitly load the dataset using the `header = FALSE` option in R to preserve all 200,000 rows. Additionally, we found that the fifth column contains a value of exactly 0 across all observations, which serves as an empty placeholder for specific software engine formats. Since this column carries no substantive statistical information for our collaborative filtering model, we will explicitly drop it during the initial data-cleaning phase, ensuring a clean 4-variable matrix for our K-Nearest Neighbors (KNN) model.
+
+### Methodology
+
+#### Background Information
+
+To construct our recommendation engine, we use **memory-based collaborative filtering** combined with a **K-Nearest Neighbors (KNN)** style approach. Collaborative filtering operates on the general idea that users or items with similar past interaction patterns can help predict future preferences. Rather than relying on descriptive item features such as game genres or developers, our approach computes similarities directly from user behavior. In the item-based model, we compare game vectors to find similar games. In the user-based model, we compare user vectors to recommend games that similar users played.
+
+To measure the proximity between different video games in a high-dimensional space, we employ **Cosine Similarity** as our primary distance metric. Mathematically, the cosine similarity $S_C$ between two game vectors $A$ and $B$ is defined as:
+
+$$S_C(A,B) = \frac{A \cdot B}{\|A\|\|B\|} =
+\frac{\sum_{i=1}^{n} A_i B_i}
+{\sqrt{\sum_{i=1}^{n} A_i^2}\sqrt{\sum_{i=1}^{n} B_i^2}}$$
+
+The metric outputs a score bounded between 0 and 1 (since interaction values are non-negative), where 1 indicates identical user interaction patterns and 0 represents complete orthogonality (no shared users). By computing these scores across all pairs, the KNN algorithm can effectively identify the $K$ closest neighbors (most similar games) for any given target item.
+
+### Project Steps
+
+Our methodology follows a structured recommendation system pipeline consisting of four major stages:
+
+1.  **Data Loading and Initial Preprocessing:**\
+    We load the Steam video game dataset in R and remove the unnecessary fifth column containing only zeros. We then retain only the relevant variables: user ID, game title, behavior type, and interaction value. Since playtime better reflects user engagement than purchase records, we focus specifically on rows where `behavior == "play"`.
+
+2.  **Data Cleaning and Sparsity Reduction:**\
+    To improve the quality of the recommendation system, we filter out inactive users who played only a very small number of games and unpopular games with very few user interactions. This step reduces sparsity in the dataset and improves the stability of collaborative filtering methods.
+
+3.  **Exploratory Data Analysis (EDA):**\
+    We analyze the distribution of playtime, user activity, and game popularity to better understand the characteristics of the dataset. The analysis reveals strong right-skewed and long-tail interaction patterns, which are common in recommendation system datasets.
+
+4.  **Collaborative Filtering Model Construction:**\
+    After preprocessing, we construct a user-item interaction matrix where rows represent users, columns represent games, and values correspond to playtime hours. Using collaborative filtering techniques based on cosine similarity and nearest-neighbor methods, we generate personalized game recommendations.
+
+    - **Model 1 (Item-Based Recommendation):**\
+      Given a specific game title, the model identifies and recommends similar games based on interaction patterns among users.
+
+    - **Model 2 (User-Based Recommendation):**\
+      Given a specific user ID, the model recommends games that similar users have played while excluding games already played by the target user.
+
+## Load and Clean the Dataset
+
+Here we clean the Steam video game dataset using tidyverse packages in R.
+
+```{r}
+library(tidyverse)
+library(Matrix)
+library(knitr)
+
+# Load dataset
+steam_candidates <- c("steam-200k.csv", "data/steam-200k.csv",
+                      file.path(Sys.getenv("HOME"), "Downloads", "steam-200k.csv"))
+
+steam_file <- steam_candidates[file.exists(steam_candidates)][1]
+
+if (is.na(steam_file)) {
+  stop("Could not find steam-200k.csv. Put the Kaggle Steam CSV in this folder or in a data/ folder, then render again.")
+}
+
+steam <- read_csv(steam_file, col_names = FALSE)
+
+# Rename columns
+colnames(steam) <- c("user_id", "game_title", "behavior", "value", "extra")
+
+# Select only useful columns
+steam <- steam %>%
+  select(user_id, game_title, behavior, value)
+
+# Check the unique values of the dataset
+cat("Number of users: ", n_distinct(steam$user_id), "\n")
+cat("Number of rows: ", nrow(steam), "\n")
+cat("Number of games: ", n_distinct(steam$game_title), "\n")
+cat("Number of behavior types: ", n_distinct(steam$behavior), "\n")
+
+```
+
+From the dataset, we have information about 12,393 distinct users and 5,153 different games. The dataset contains 200,000 user-game interaction records. The two behavior types included in the dataset are purchase and play.
+
+We mainly use the play behavior for our recommendation model because playtime better reflects user preference and engagement with a game.
+
+The original dataset also included an additional column containing only zeros, which did not provide useful information for the recommendation system. Therefore, we removed this unnecessary column during preprocessing.
+
+## Data Cleaning
+
+### Play Behavior Filtering
+
+For the recommendation system, we mainly focus on the play behavior because playtime reflects actual user interest more accurately than purchase behavior.
+
+```{r}
+# Keep only play behavior
+steam_play <- steam %>%
+  filter(behavior == "play")
+
+# Rename value column
+steam_play <- steam_play %>%
+  rename(hours_played = value)
+
+# Remove unnecessary column
+steam_play <- steam_play %>%
+  select(user_id, game_title, hours_played)
+
+head(steam_play)
+```
+
+We first filter the dataset to keep only the play behavior because playtime provides more meaningful information about user preference than purchase behavior. We then rename the value column to hours_played and keep only the relevant columns needed for the recommendation system.
+
+### Filtering Active Users and Popular Games
+
+Many users played only a small number of games, and some games were played by only a few users. To reduce sparsity and improve recommendation quality, we filter inactive users and unpopular games.
+
+```{r}
+# Count number of games played by each user
+user_counts <- steam_play %>%
+  count(user_id, name = "num_games_played")
+
+summary(user_counts$num_games_played)
+
+# Keep active users
+active_users <- user_counts %>%
+  filter(num_games_played >= 3)
+
+# Count number of users for each game
+game_counts <- steam_play %>%
+  count(game_title, name = "num_users")
+
+summary(game_counts$num_users)
+
+# Keep popular games
+popular_games <- game_counts %>%
+  filter(num_users >= 5)
+
+# Filter dataset
+steam_clean <- steam_play %>%
+  filter(user_id %in% active_users$user_id,
+         game_title %in% popular_games$game_title)
+
+# Final dataset information
+cat("Number of rows: ", nrow(steam_clean), "\n")
+cat("Number of users: ", n_distinct(steam_clean$user_id), "\n")
+cat("Number of games: ", n_distinct(steam_clean$game_title), "\n")
+```
+
+After filtering, the dataset contains 57,647 user-game interactions from 3,464 active users across 1,583 games.
+
+The summary statistics show that many users played only a small number of games, while a few users played hundreds of games. Similarly, some games were played by only a few users, while popular games were played by thousands of users. Filtering inactive users and unpopular games helps reduce sparsity and improves the quality of the recommendation system.
+
+### Missing Value Check
+
+Before building the recommendation system, we check whether the dataset contains missing values.
+
+```{r}
+colSums(is.na(steam_clean))
+```
+
+The dataset does not contain any missing values, so no additional imputation or preprocessing is required.
+
+## Exploratory Data Analysis (EDA)
+
+Before building the recommendation system, we explore the distribution of playtime and user-game interactions to better understand user behavior and dataset characteristics.
+
+### Distribution of Playtime
+
+We first examine the distribution of game playtime across users.
+
+```{r}
+# Histogram of playtime
+ggplot(steam_clean, aes(x = hours_played)) +
+  geom_histogram(
+    binwidth = 10,
+    fill = "skyblue",
+    color = "black"
+  ) +
+  coord_cartesian(xlim = c(0, 200)) +
+  labs(
+    title = "Distribution of Playtime",
+    x = "Hours Played",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+```
+
+The histogram shows that the distribution of playtime is highly right-skewed. Most users spent relatively few hours playing games, while a small number of users accumulated substantially larger playtimes.
+
+The distribution also exhibits a long tail, indicating that only a small portion of users are highly active gamers. This pattern is common in recommendation system datasets and contributes to the sparsity of the user-item interaction matrix.
+
+### Top 10 Most Played Games
+
+Next, we examine the games with the highest total playtime across all users.
+
+```{r}
+# Calculate total playtime for each game
+top_games <- steam_clean %>%
+  group_by(game_title) %>%
+  summarise(total_hours = sum(hours_played)) %>%
+  arrange(desc(total_hours)) %>%
+  slice_head(n = 10)
+
+# Create bar plot
+ggplot(top_games,
+       aes(x = reorder(game_title, total_hours),
+           y = total_hours)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(
+    title = "Top 10 Most Played Games",
+    x = "Game Title",
+    y = "Total Hours Played"
+  ) +
+  theme_minimal()
+```
+
+The bar plot shows the ten games with the highest total playtime in the dataset. Dota 2 has the highest total playtime by a substantial margin, followed by Counter-Strike: Global Offensive and Team Fortress 2.
+
+Most of the top-ranked games are multiplayer or highly replayable titles, suggesting that users tend to spend significantly more time on competitive and long-session games. This indicates that a small number of popular games account for a large proportion of overall user engagement.
+
+### Distribution of Games per User
+
+Next, we examine how many games each user has played.
+
+```{r}
+# Number of games played per user
+games_per_user <- steam_clean %>%
+  group_by(user_id) %>%
+  summarise(num_games = n())
+
+# Histogram
+ggplot(games_per_user, aes(x = num_games)) +
+  geom_histogram(
+    binwidth = 2,
+    fill = "skyblue",
+    color = "black"
+  ) +
+  coord_cartesian(xlim = c(0, 100)) +
+  labs(
+    title = "Distribution of Games per User",
+    x = "Number of Games Played",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+```
+
+The histogram shows that most users played only a relatively small number of games, while a small group of users played substantially more games.
+
+The distribution is strongly right-skewed, with a long tail extending toward highly active users who interacted with dozens of games. This pattern indicates that user activity is highly uneven across the dataset and contributes to the sparsity of the user-item interaction matrix.
+
+### Distribution of Users per Game
+
+Next, we examine how many users interacted with each game.
+
+```{r}
+# Number of users per game
+users_per_game <- steam_clean %>%
+  group_by(game_title) %>%
+  summarise(num_users = n())
+
+# Histogram
+ggplot(users_per_game, aes(x = num_users)) +
+  geom_histogram(
+    binwidth = 5,
+    fill = "skyblue",
+    color = "black"
+  ) +
+  coord_cartesian(xlim = c(0, 300)) +
+  labs(
+    title = "Distribution of Users per Game",
+    x = "Number of Users",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+```
+
+The histogram shows that most games were played by only a relatively small number of users, while a few highly popular games attracted substantially larger player bases.
+
+The distribution is highly right-skewed, indicating that user interactions are concentrated on a limited number of popular games. This long-tail pattern is common in recommendation system datasets and can contribute to popularity bias in collaborative filtering models.
+
+The exploratory analysis reveals strong sparsity and long-tail interaction patterns in the dataset. These characteristics motivate the use of collaborative filtering methods for the recommendation system.
+
+## Item-Based Recommendation Model
+
+The item-based recommendation model compares games to other games using user playtime behavior. Each game is represented as a vector of users, and each value in the vector is the transformed number of hours that user played the game. Games with similar playtime patterns across users are treated as similar items.
+
+The model does not use genre, developer, price, or tags. It only uses player behavior. Cosine similarity is used because it compares the shape of two playtime vectors instead of only comparing total playtime. This is useful for the Steam data because some users have extremely large playtime values.
+
+Before creating the matrix, `log1p(hours_played)` is used instead of raw playtime. This keeps larger playtimes meaningful while reducing the effect of extreme values.
+
+### Build the Item-User Matrix
+
+```{r}
+# Combine repeated user-game rows and dampen very large playtime values
+steam_model <- steam_clean %>%
+  group_by(user_id, game_title) %>%
+  summarize(hours_played = sum(hours_played), .groups = "drop") %>%
+  mutate(play_weight = log1p(hours_played))
+
+user_index <- factor(steam_model$user_id)
+game_index <- factor(steam_model$game_title)
+
+# Rows are games, columns are users, and values are transformed playtime.
+item_user_matrix <- sparseMatrix(
+  i = as.integer(game_index),
+  j = as.integer(user_index),
+  x = steam_model$play_weight,
+  dimnames = list(levels(game_index), levels(user_index))
+)
+
+cat("Games in item-user matrix:", nrow(item_user_matrix), "\n")
+cat("Users in item-user matrix:", ncol(item_user_matrix), "\n")
+cat("Non-zero playtime entries:", length(item_user_matrix@x), "\n")
+```
+
+The matrix is sparse because most users played only a small fraction of the available games. A sparse matrix stores the non-zero playtime entries efficiently.
+
+### Cosine Similarity Function
+
+The function below calculates cosine similarity between a selected game and every other game in the item-user matrix. It then returns the 10 games with the highest similarity scores.
+
+```{r}
+recommend_similar_games <- function(target_game, item_matrix, n = 10) {
+  if (!target_game %in% rownames(item_matrix)) {
+    stop("This game title is not in the item-user matrix.")
+  }
+
+  target_vector <- item_matrix[target_game, , drop = FALSE]
+
+  # Compare the target game vector to all other game vectors.
+  dot_products <- as.numeric(item_matrix %*% Matrix::t(target_vector))
+  item_norms <- sqrt(Matrix::rowSums(item_matrix^2))
+  target_norm <- sqrt(sum(target_vector^2))
+
+  similarity <- dot_products / (item_norms * target_norm)
+  similarity[!is.finite(similarity)] <- 0
+
+  tibble(
+    game_title = rownames(item_matrix),
+    cosine_similarity = similarity
+  ) %>%
+    filter(game_title != target_game) %>%
+    arrange(desc(cosine_similarity)) %>%
+    slice_head(n = n)
+}
+```
+
+### Example Recommendation
+
+For the example run, `Counter-Strike Global Offensive` is used because it is one of the major games in the dataset and appears among the highest-playtime games in the EDA. If that title is not available after filtering, the code uses the most-played game in the cleaned dataset.
+
+```{r}
+target_game <- "Counter-Strike Global Offensive"
+
+if (!target_game %in% rownames(item_user_matrix)) {
+  target_game <- steam_clean %>%
+    count(game_title, wt = hours_played, name = "total_hours") %>%
+    arrange(desc(total_hours)) %>%
+    slice(1) %>%
+    pull(game_title)
+}
+
+item_based_recommendations <- recommend_similar_games(
+  target_game = target_game,
+  item_matrix = item_user_matrix,
+  n = 10
+)
+
+cat("Target game:", target_game, "\n")
+
+item_based_recommendations %>%
+  mutate(cosine_similarity = round(cosine_similarity, 4)) %>%
+  kable(col.names = c("Recommended Game", "Cosine Similarity"))
+```
+
+The output can be read as games that were played by similar groups of users. A higher cosine similarity means the two games have more similar playtime patterns.
+
+### Checking Several Target Games
+
+The model is also checked with several target games to make sure the function works beyond one example title.
+
+```{r}
+test_games <- c(
+  "Counter-Strike Global Offensive",
+  "Dota 2",
+  "Team Fortress 2",
+  "Portal 2"
+)
+
+available_test_games <- test_games[test_games %in% rownames(item_user_matrix)]
+
+similar_game_check <- map_dfr(available_test_games, function(game) {
+  recommend_similar_games(game, item_user_matrix, n = 5) %>%
+    mutate(target_game = game, .before = 1)
+})
+
+similar_game_check %>%
+  mutate(cosine_similarity = round(cosine_similarity, 4)) %>%
+  kable(col.names = c("Target Game", "Recommended Game", "Cosine Similarity"))
+```
+
+This model is useful when a player already has one game in mind and wants similar games. A limitation is that popular games can appear often because they overlap with many user histories. The model also cannot recommend brand-new games with no interaction history.
+
+This item-based model covers the game-to-game recommendation question. The next section uses the same cleaned interaction matrix for user-to-game recommendations.
+
+## User-Based Recommendation Model
+
+Next is the user-based recommendation model. The main concept for this model is to recommend games based on a chosen user's past history. To do this, we use the target user's playtime pattern to find similar users in the Steam dataset. These similar users, or neighbors, spent time on some of the same games as the target user, so their other games can be used as possible recommendations.
+
+Like the item-based recommendation model, this model uses only player behavior. If another user played many of the same games as the target user and had a similar pattern of transformed playtime values, that user receives a higher cosine similarity score. This makes the method consistent with the collaborative filtering approach from the lecture slides.
+
+We first transposed the user-item matrix created previously so that the rows are for users and the columns are for games. This is to keep the similarity function the same as from the previous model in order to output cosine similarity scores of similar users.
+
+```{r}
+# Matrix Transposition (User IDs x Game Titles)
+user_item_matrix <- t(item_user_matrix)
+```
+
+### Similar Users
+
+We take the same cosine similarity idea from the item-based model, but this time we apply user-based collaborative filtering by comparing a chosen target user with the other user vectors. By default, this returns the top 10 nearest neighbors along with their calculated cosine similarity scores.
+
+```{r}
+# Function for Similar Users
+similar_users <- function(target_user, user_matrix, n = 10) {
+  if (!target_user %in% rownames(user_matrix)) {
+    stop("This user ID is not in the user-item matrix.")
+  }
+
+  target_vector <- user_matrix[target_user, , drop = FALSE]
+
+  dot_products <- as.numeric(user_matrix %*% Matrix::t(target_vector))
+  user_norms <- sqrt(Matrix::rowSums(user_matrix^2))
+  target_norm <- sqrt(sum(target_vector^2))
+
+  similarity <- dot_products / (user_norms * target_norm)
+  similarity[!is.finite(similarity)] <- 0
+  names(similarity) <- rownames(user_matrix)
+  
+  users <- tibble(user_id = rownames(user_matrix), cosine_similarity = similarity) %>%
+    filter(user_id != target_user) %>%
+    arrange(desc(cosine_similarity)) %>%
+    slice_head(n = n)
+  
+  return(users)
+}
+```
+
+To test the user similarity function, we use `62990992` as the ID of our target user because this user has many interactions in the cleaned Steam dataset.
+
+```{r}
+# Chosen User ID
+target_user <- "62990992"
+
+# Similarity Function
+similar_community <- similar_users(target_user, user_item_matrix, n = 10)
+
+cat("Similar Users for User ID:", target_user, "\n"); similar_community %>%
+  mutate(cosine_similarity = round(cosine_similarity, 4)) %>%
+  kable(col.names = c("Similar User", "Cosine Similarity"))
+```
+
+This output shows 10 IDs of the most similar players in the community who spent a similar amount of time on the same games as `62990992`. This time, a higher cosine similarity implies two users who have more similar playtime patterns between each other in the same games. But we are not done yet, as this is a user-to-user similarity model. Since we are recommending games to a particular user, we also want to find different games that the neighbors in the community can recommend to that particular user.
+
+### Game Recommendations from Similar Users
+
+We then create another function to recommend games based on the neighbors' other game interests. The recommendation score is calculated using a similarity-weighted average of neighbor playtime weights. After applying the similarity function, we also identify the games that the target user has already played. Those games are removed from the recommendation list because recommending something the user already played would not be useful. By default, this returns the top 10 recommended games.
+
+```{r}
+# Function for Game Recommendations by Neighbors
+recommend_games_by_user <- function(target_user, user_matrix, k, n = 10) {
+  recommended_users <- similar_users(target_user, user_matrix, n = k)
+  played_games <- names(which(user_matrix[target_user, ] > 0))
+  
+  score <- rep(0, ncol(user_matrix))
+  sim_total <- rep(0, ncol(user_matrix))
+  names(score) <- colnames(user_matrix)
+  names(sim_total) <- colnames(user_matrix)
+
+  for (i in seq_len(nrow(recommended_users))) {
+    neighbor <- recommended_users$user_id[i]
+    similarity <- recommended_users$cosine_similarity[i]
+    neighbor_vector <- as.numeric(user_matrix[neighbor, ])
+    score <- score + similarity * neighbor_vector
+    sim_total <- sim_total + similarity * as.numeric(neighbor_vector > 0)
+  }
+
+  score <- ifelse(sim_total > 0, score / sim_total, 0)
+  score[played_games] <- 0
+
+  tibble(game_title = names(score), rec_score = score) %>%
+    arrange(desc(rec_score)) %>%
+    slice_head(n = n)
+}
+```
+
+To run this, let's take `62990992` as the target user ID again, but this time, we increase the number of neighbors (k) to 50 for wider results of different games to recommend.
+
+```{r}
+target_user <- "62990992"
+
+# Game Recommendation Function
+user_based_recommendations <- recommend_games_by_user(target_user = target_user,
+                                                      user_matrix = user_item_matrix,
+                                                      k = 50, n = 10)
+
+cat("Recommendations for User ID:", target_user, "\n"); user_based_recommendations %>%
+  mutate(rec_score = round(rec_score, 4)) %>%
+  kable(col.names = c("Recommended Game", "Recommendation Score"))
+```
+
+The output highlights games that similar users spent meaningful time playing, while excluding games already played by the target user. A higher score means that similar users had stronger transformed playtime values for that game.
+
+### Checking Several Target Users
+
+Like the item-based model, we can also test the user-based model with other users so that the recommender system is not only demonstrated on one user ID.
+
+```{r}
+test_users <- c("62990992", "11403772", "49893565", "47457723")
+
+available_test_users <- test_users[test_users %in% rownames(user_item_matrix)]
+
+similar_user_check <- map_dfr(available_test_users, function(user_id) {
+  recommend_games_by_user(user_id, user_item_matrix, k = 50, n = 10) %>%
+    mutate(target_user = user_id, .before = 1)
+})
+
+similar_user_check %>%
+  mutate(rec_score = round(rec_score, 4)) %>%
+  kable(col.names = c("Target User", "Recommended Game", "Recommendation Score"))
+```
+
+This user-to-game model is useful for suggesting games a player has not tried yet, using interactions from a wider community that plays some of the same games. The same limitation applies: popular games can still appear frequently in recommendations, and brand-new games are hard to recommend because they do not have interaction history yet. Still, this model gives a practical way to turn past Steam behavior into personalized game suggestions.
+
+## Conclusion
+
+This project shows that collaborative filtering can be used to build a Steam game recommendation system from user behavior alone. After cleaning the original 200,000-row dataset, the analysis focused on play behavior because playtime gives a stronger signal of interest than purchase records alone. The EDA showed a right-skewed dataset where a small number of games and users account for a large share of activity, so inactive users and unpopular games were filtered before modeling.
+
+The final recommender system includes two models. The item-based model compares games based on shared player behavior and returns similar games for a selected title. The user-based model finds similar users, scores games from those neighbors, and removes games the target user already played.
+
+The main limitation is that the system relies only on past interactions. This can favor popular games and makes brand-new games difficult to recommend. A stronger future version could combine collaborative filtering with Steam metadata such as genre, tags, reviews, or release year. Even with these limits, the models turn the Steam dataset into practical item-to-item and user-to-item recommendations.

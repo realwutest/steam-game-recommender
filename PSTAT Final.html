@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Steam Game Recommendation System</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="PSTAT Final_files/libs/clipboard/clipboard.min.js"></script>
+<script src="PSTAT Final_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="PSTAT Final_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="PSTAT Final_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="PSTAT Final_files/libs/quarto-html/popper.min.js"></script>
+<script src="PSTAT Final_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="PSTAT Final_files/libs/quarto-html/anchor.min.js"></script>
+<link href="PSTAT Final_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="PSTAT Final_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="PSTAT Final_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="PSTAT Final_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="PSTAT Final_files/libs/bootstrap/bootstrap-d6a003b94517c951b2d65075d42fb01b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#data-descriptions" id="toc-data-descriptions" class="nav-link" data-scroll-target="#data-descriptions">Data Descriptions</a></li>
+  <li><a href="#methodology" id="toc-methodology" class="nav-link" data-scroll-target="#methodology">Methodology</a></li>
+  <li><a href="#project-steps" id="toc-project-steps" class="nav-link" data-scroll-target="#project-steps">Project Steps</a></li>
+  </ul></li>
+  <li><a href="#load-and-clean-the-dataset" id="toc-load-and-clean-the-dataset" class="nav-link" data-scroll-target="#load-and-clean-the-dataset">Load and Clean the Dataset</a></li>
+  <li><a href="#data-cleaning" id="toc-data-cleaning" class="nav-link" data-scroll-target="#data-cleaning">Data Cleaning</a>
+  <ul class="collapse">
+  <li><a href="#play-behavior-filtering" id="toc-play-behavior-filtering" class="nav-link" data-scroll-target="#play-behavior-filtering">Play Behavior Filtering</a></li>
+  <li><a href="#filtering-active-users-and-popular-games" id="toc-filtering-active-users-and-popular-games" class="nav-link" data-scroll-target="#filtering-active-users-and-popular-games">Filtering Active Users and Popular Games</a></li>
+  <li><a href="#missing-value-check" id="toc-missing-value-check" class="nav-link" data-scroll-target="#missing-value-check">Missing Value Check</a></li>
+  </ul></li>
+  <li><a href="#exploratory-data-analysis-eda" id="toc-exploratory-data-analysis-eda" class="nav-link" data-scroll-target="#exploratory-data-analysis-eda">Exploratory Data Analysis (EDA)</a>
+  <ul class="collapse">
+  <li><a href="#distribution-of-playtime" id="toc-distribution-of-playtime" class="nav-link" data-scroll-target="#distribution-of-playtime">Distribution of Playtime</a></li>
+  <li><a href="#top-10-most-played-games" id="toc-top-10-most-played-games" class="nav-link" data-scroll-target="#top-10-most-played-games">Top 10 Most Played Games</a></li>
+  <li><a href="#distribution-of-games-per-user" id="toc-distribution-of-games-per-user" class="nav-link" data-scroll-target="#distribution-of-games-per-user">Distribution of Games per User</a></li>
+  <li><a href="#distribution-of-users-per-game" id="toc-distribution-of-users-per-game" class="nav-link" data-scroll-target="#distribution-of-users-per-game">Distribution of Users per Game</a></li>
+  </ul></li>
+  <li><a href="#item-based-recommendation-model" id="toc-item-based-recommendation-model" class="nav-link" data-scroll-target="#item-based-recommendation-model">Item-Based Recommendation Model</a>
+  <ul class="collapse">
+  <li><a href="#build-the-item-user-matrix" id="toc-build-the-item-user-matrix" class="nav-link" data-scroll-target="#build-the-item-user-matrix">Build the Item-User Matrix</a></li>
+  <li><a href="#cosine-similarity-function" id="toc-cosine-similarity-function" class="nav-link" data-scroll-target="#cosine-similarity-function">Cosine Similarity Function</a></li>
+  <li><a href="#example-recommendation" id="toc-example-recommendation" class="nav-link" data-scroll-target="#example-recommendation">Example Recommendation</a></li>
+  <li><a href="#checking-several-target-games" id="toc-checking-several-target-games" class="nav-link" data-scroll-target="#checking-several-target-games">Checking Several Target Games</a></li>
+  </ul></li>
+  <li><a href="#user-based-recommendation-model" id="toc-user-based-recommendation-model" class="nav-link" data-scroll-target="#user-based-recommendation-model">User-Based Recommendation Model</a>
+  <ul class="collapse">
+  <li><a href="#similar-users" id="toc-similar-users" class="nav-link" data-scroll-target="#similar-users">Similar Users</a></li>
+  <li><a href="#game-recommendations-from-similar-users" id="toc-game-recommendations-from-similar-users" class="nav-link" data-scroll-target="#game-recommendations-from-similar-users">Game Recommendations from Similar Users</a></li>
+  <li><a href="#checking-several-target-users" id="toc-checking-several-target-users" class="nav-link" data-scroll-target="#checking-several-target-users">Checking Several Target Users</a></li>
+  </ul></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Steam Game Recommendation System</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Our group implemented a collaborative filtering recommender system to generate personalized video game recommendations using a public dataset of user behaviors from Steam, the world’s most popular PC gaming hub. After constructing a user-item interaction matrix, we used K-nearest-neighbor style similarity methods with cosine similarity to compare games and users based on collective playtime patterns. Our model aims to achieve two primary objectives: first, to recommend 10 similar games given a specific game title (Item-to-Item), and second, to generate 10 personalized game suggestions for a unique user ID based on their past history while filtering out already-played games (User-to-Item). With Steam’s massive collection spanning from AAA blockbusters to small indie titles, developing robust discovery tools is a highly valuable asset for enhancing player engagement. Our group was interested in this project because it allowed us to work with a large-scale behavioral dataset and create a predictive model with practical, real-world applications.</p>
+<section id="data-descriptions" class="level3">
+<h3 class="anchored" data-anchor-id="data-descriptions">Data Descriptions</h3>
+<p>We obtained our behavioral dataset by downloading the public Steam Video Games dataset from Kaggle. The dataset is structurally static, capturing a comprehensive snapshot of digital interactions without requiring real-time API streaming. The dataset consists of exactly 200,000 observations and 4 primary predictors: <code>user_id</code>, <code>game_title</code>, <code>behavior</code>, and <code>value</code>. The dataset contains zero missing values.</p>
+<p>The variables we are working with represent two distinct data types.</p>
+<p><strong>Categorical Variables</strong> <code>user_id</code> (the unique identifier for each user), <code>game_title</code> (the name of the Steam game), and <code>behavior</code> (the type of user interaction, classified as either ‘purchase’ or ‘play’).</p>
+<p><strong>Numeric Variable</strong> <code>value</code>, which represents the degree to which the behavior was performed (a binary 1.0 for ‘purchase’, or a continuous measure of play-hours for ‘play’).</p>
+<p>Notably, the raw CSV file lacks a predefined header row. To prevent any data loss or structural misinterpretation during data ingestion, we will explicitly load the dataset using the <code>header = FALSE</code> option in R to preserve all 200,000 rows. Additionally, we found that the fifth column contains a value of exactly 0 across all observations, which serves as an empty placeholder for specific software engine formats. Since this column carries no substantive statistical information for our collaborative filtering model, we will explicitly drop it during the initial data-cleaning phase, ensuring a clean 4-variable matrix for our K-Nearest Neighbors (KNN) model.</p>
+</section>
+<section id="methodology" class="level3">
+<h3 class="anchored" data-anchor-id="methodology">Methodology</h3>
+<section id="background-information" class="level4">
+<h4 class="anchored" data-anchor-id="background-information">Background Information</h4>
+<p>To construct our recommendation engine, we use <strong>memory-based collaborative filtering</strong> combined with a <strong>K-Nearest Neighbors (KNN)</strong> style approach. Collaborative filtering operates on the general idea that users or items with similar past interaction patterns can help predict future preferences. Rather than relying on descriptive item features such as game genres or developers, our approach computes similarities directly from user behavior. In the item-based model, we compare game vectors to find similar games. In the user-based model, we compare user vectors to recommend games that similar users played.</p>
+<p>To measure the proximity between different video games in a high-dimensional space, we employ <strong>Cosine Similarity</strong> as our primary distance metric. Mathematically, the cosine similarity <span class="math inline">\(S_C\)</span> between two game vectors <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> is defined as:</p>
+<p><span class="math display">\[S_C(A,B) = \frac{A \cdot B}{\|A\|\|B\|} =
+\frac{\sum_{i=1}^{n} A_i B_i}
+{\sqrt{\sum_{i=1}^{n} A_i^2}\sqrt{\sum_{i=1}^{n} B_i^2}}\]</span></p>
+<p>The metric outputs a score bounded between 0 and 1 (since interaction values are non-negative), where 1 indicates identical user interaction patterns and 0 represents complete orthogonality (no shared users). By computing these scores across all pairs, the KNN algorithm can effectively identify the <span class="math inline">\(K\)</span> closest neighbors (most similar games) for any given target item.</p>
+</section>
+</section>
+<section id="project-steps" class="level3">
+<h3 class="anchored" data-anchor-id="project-steps">Project Steps</h3>
+<p>Our methodology follows a structured recommendation system pipeline consisting of four major stages:</p>
+<ol type="1">
+<li><p><strong>Data Loading and Initial Preprocessing:</strong><br>
+We load the Steam video game dataset in R and remove the unnecessary fifth column containing only zeros. We then retain only the relevant variables: user ID, game title, behavior type, and interaction value. Since playtime better reflects user engagement than purchase records, we focus specifically on rows where <code>behavior == "play"</code>.</p></li>
+<li><p><strong>Data Cleaning and Sparsity Reduction:</strong><br>
+To improve the quality of the recommendation system, we filter out inactive users who played only a very small number of games and unpopular games with very few user interactions. This step reduces sparsity in the dataset and improves the stability of collaborative filtering methods.</p></li>
+<li><p><strong>Exploratory Data Analysis (EDA):</strong><br>
+We analyze the distribution of playtime, user activity, and game popularity to better understand the characteristics of the dataset. The analysis reveals strong right-skewed and long-tail interaction patterns, which are common in recommendation system datasets.</p></li>
+<li><p><strong>Collaborative Filtering Model Construction:</strong><br>
+After preprocessing, we construct a user-item interaction matrix where rows represent users, columns represent games, and values correspond to playtime hours. Using collaborative filtering techniques based on cosine similarity and nearest-neighbor methods, we generate personalized game recommendations.</p>
+<ul>
+<li><p><strong>Model 1 (Item-Based Recommendation):</strong><br>
+Given a specific game title, the model identifies and recommends similar games based on interaction patterns among users.</p></li>
+<li><p><strong>Model 2 (User-Based Recommendation):</strong><br>
+Given a specific user ID, the model recommends games that similar users have played while excluding games already played by the target user.</p></li>
+</ul></li>
+</ol>
+</section>
+</section>
+<section id="load-and-clean-the-dataset" class="level2">
+<h2 class="anchored" data-anchor-id="load-and-clean-the-dataset">Load and Clean the Dataset</h2>
+<p>Here we clean the Steam video game dataset using tidyverse packages in R.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Matrix)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Load dataset</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>steam_candidates <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"steam-200k.csv"</span>, <span class="st">"data/steam-200k.csv"</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">file.path</span>(<span class="fu">Sys.getenv</span>(<span class="st">"HOME"</span>), <span class="st">"Downloads"</span>, <span class="st">"steam-200k.csv"</span>))</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>steam_file <span class="ot">&lt;-</span> steam_candidates[<span class="fu">file.exists</span>(steam_candidates)][<span class="dv">1</span>]</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is.na</span>(steam_file)) {</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stop</span>(<span class="st">"Could not find steam-200k.csv. Put the Kaggle Steam CSV in this folder or in a data/ folder, then render again."</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>steam <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(steam_file, <span class="at">col_names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename columns</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(steam) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"user_id"</span>, <span class="st">"game_title"</span>, <span class="st">"behavior"</span>, <span class="st">"value"</span>, <span class="st">"extra"</span>)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Select only useful columns</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>steam <span class="ot">&lt;-</span> steam <span class="sc">%&gt;%</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(user_id, game_title, behavior, value)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the unique values of the dataset</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Number of users: "</span>, <span class="fu">n_distinct</span>(steam<span class="sc">$</span>user_id), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Number of users:  12393 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Number of rows: "</span>, <span class="fu">nrow</span>(steam), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Number of rows:  200000 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Number of games: "</span>, <span class="fu">n_distinct</span>(steam<span class="sc">$</span>game_title), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Number of games:  5153 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Number of behavior types: "</span>, <span class="fu">n_distinct</span>(steam<span class="sc">$</span>behavior), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Number of behavior types:  2 </code></pre>
+</div>
+</div>
+<p>From the dataset, we have information about 12,393 distinct users and 5,153 different games. The dataset contains 200,000 user-game interaction records. The two behavior types included in the dataset are purchase and play.</p>
+<p>We mainly use the play behavior for our recommendation model because playtime better reflects user preference and engagement with a game.</p>
+<p>The original dataset also included an additional column containing only zeros, which did not provide useful information for the recommendation system. Therefore, we removed this unnecessary column during preprocessing.</p>
+</section>
+<section id="data-cleaning" class="level2">
+<h2 class="anchored" data-anchor-id="data-cleaning">Data Cleaning</h2>
+<section id="play-behavior-filtering" class="level3">
+<h3 class="anchored" data-anchor-id="play-behavior-filtering">Play Behavior Filtering</h3>
+<p>For the recommendation system, we mainly focus on the play behavior because playtime reflects actual user interest more accurately than purchase behavior.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep only play behavior</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>steam_play <span class="ot">&lt;-</span> steam <span class="sc">%&gt;%</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(behavior <span class="sc">==</span> <span class="st">"play"</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename value column</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>steam_play <span class="ot">&lt;-</span> steam_play <span class="sc">%&gt;%</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">hours_played =</span> value)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove unnecessary column</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>steam_play <span class="ot">&lt;-</span> steam_play <span class="sc">%&gt;%</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(user_id, game_title, hours_played)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(steam_play)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 x 3
+    user_id game_title                 hours_played
+      &lt;dbl&gt; &lt;chr&gt;                             &lt;dbl&gt;
+1 151603712 The Elder Scrolls V Skyrim        273  
+2 151603712 Fallout 4                          87  
+3 151603712 Spore                              14.9
+4 151603712 Fallout New Vegas                  12.1
+5 151603712 Left 4 Dead 2                       8.9
+6 151603712 HuniePop                            8.5</code></pre>
+</div>
+</div>
+<p>We first filter the dataset to keep only the play behavior because playtime provides more meaningful information about user preference than purchase behavior. We then rename the value column to hours_played and keep only the relevant columns needed for the recommendation system.</p>
+</section>
+<section id="filtering-active-users-and-popular-games" class="level3">
+<h3 class="anchored" data-anchor-id="filtering-active-users-and-popular-games">Filtering Active Users and Popular Games</h3>
+<p>Many users played only a small number of games, and some games were played by only a few users. To reduce sparsity and improve recommendation quality, we filter inactive users and unpopular games.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Count number of games played by each user</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>user_counts <span class="ot">&lt;-</span> steam_play <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(user_id, <span class="at">name =</span> <span class="st">"num_games_played"</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(user_counts<span class="sc">$</span>num_games_played)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   1.00    1.00    1.00    6.21    3.00  498.00 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep active users</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>active_users <span class="ot">&lt;-</span> user_counts <span class="sc">%&gt;%</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(num_games_played <span class="sc">&gt;=</span> <span class="dv">3</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Count number of users for each game</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>game_counts <span class="ot">&lt;-</span> steam_play <span class="sc">%&gt;%</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(game_title, <span class="at">name =</span> <span class="st">"num_users"</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(game_counts<span class="sc">$</span>num_users)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   1.00    1.00    4.00   19.59   12.00 4841.00 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep popular games</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>popular_games <span class="ot">&lt;-</span> game_counts <span class="sc">%&gt;%</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(num_users <span class="sc">&gt;=</span> <span class="dv">5</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter dataset</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>steam_clean <span class="ot">&lt;-</span> steam_play <span class="sc">%&gt;%</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(user_id <span class="sc">%in%</span> active_users<span class="sc">$</span>user_id,</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>         game_title <span class="sc">%in%</span> popular_games<span class="sc">$</span>game_title)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Final dataset information</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Number of rows: "</span>, <span class="fu">nrow</span>(steam_clean), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Number of rows:  57647 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Number of users: "</span>, <span class="fu">n_distinct</span>(steam_clean<span class="sc">$</span>user_id), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Number of users:  3464 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Number of games: "</span>, <span class="fu">n_distinct</span>(steam_clean<span class="sc">$</span>game_title), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Number of games:  1583 </code></pre>
+</div>
+</div>
+<p>After filtering, the dataset contains 57,647 user-game interactions from 3,464 active users across 1,583 games.</p>
+<p>The summary statistics show that many users played only a small number of games, while a few users played hundreds of games. Similarly, some games were played by only a few users, while popular games were played by thousands of users. Filtering inactive users and unpopular games helps reduce sparsity and improves the quality of the recommendation system.</p>
+</section>
+<section id="missing-value-check" class="level3">
+<h3 class="anchored" data-anchor-id="missing-value-check">Missing Value Check</h3>
+<p>Before building the recommendation system, we check whether the dataset contains missing values.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(steam_clean))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     user_id   game_title hours_played 
+           0            0            0 </code></pre>
+</div>
+</div>
+<p>The dataset does not contain any missing values, so no additional imputation or preprocessing is required.</p>
+</section>
+</section>
+<section id="exploratory-data-analysis-eda" class="level2">
+<h2 class="anchored" data-anchor-id="exploratory-data-analysis-eda">Exploratory Data Analysis (EDA)</h2>
+<p>Before building the recommendation system, we explore the distribution of playtime and user-game interactions to better understand user behavior and dataset characteristics.</p>
+<section id="distribution-of-playtime" class="level3">
+<h3 class="anchored" data-anchor-id="distribution-of-playtime">Distribution of Playtime</h3>
+<p>We first examine the distribution of game playtime across users.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Histogram of playtime</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(steam_clean, <span class="fu">aes</span>(<span class="at">x =</span> hours_played)) <span class="sc">+</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">binwidth =</span> <span class="dv">10</span>,</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> <span class="st">"skyblue"</span>,</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"black"</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">200</span>)) <span class="sc">+</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Distribution of Playtime"</span>,</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Hours Played"</span>,</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Frequency"</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="PSTAT-Final_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The histogram shows that the distribution of playtime is highly right-skewed. Most users spent relatively few hours playing games, while a small number of users accumulated substantially larger playtimes.</p>
+<p>The distribution also exhibits a long tail, indicating that only a small portion of users are highly active gamers. This pattern is common in recommendation system datasets and contributes to the sparsity of the user-item interaction matrix.</p>
+</section>
+<section id="top-10-most-played-games" class="level3">
+<h3 class="anchored" data-anchor-id="top-10-most-played-games">Top 10 Most Played Games</h3>
+<p>Next, we examine the games with the highest total playtime across all users.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate total playtime for each game</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>top_games <span class="ot">&lt;-</span> steam_clean <span class="sc">%&gt;%</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(game_title) <span class="sc">%&gt;%</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_hours =</span> <span class="fu">sum</span>(hours_played)) <span class="sc">%&gt;%</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(total_hours)) <span class="sc">%&gt;%</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">10</span>)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Create bar plot</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(top_games,</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(game_title, total_hours),</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>           <span class="at">y =</span> total_hours)) <span class="sc">+</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"steelblue"</span>) <span class="sc">+</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Top 10 Most Played Games"</span>,</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Game Title"</span>,</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Total Hours Played"</span></span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="PSTAT-Final_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The bar plot shows the ten games with the highest total playtime in the dataset. Dota 2 has the highest total playtime by a substantial margin, followed by Counter-Strike: Global Offensive and Team Fortress 2.</p>
+<p>Most of the top-ranked games are multiplayer or highly replayable titles, suggesting that users tend to spend significantly more time on competitive and long-session games. This indicates that a small number of popular games account for a large proportion of overall user engagement.</p>
+</section>
+<section id="distribution-of-games-per-user" class="level3">
+<h3 class="anchored" data-anchor-id="distribution-of-games-per-user">Distribution of Games per User</h3>
+<p>Next, we examine how many games each user has played.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Number of games played per user</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>games_per_user <span class="ot">&lt;-</span> steam_clean <span class="sc">%&gt;%</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(user_id) <span class="sc">%&gt;%</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">num_games =</span> <span class="fu">n</span>())</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Histogram</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(games_per_user, <span class="fu">aes</span>(<span class="at">x =</span> num_games)) <span class="sc">+</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">binwidth =</span> <span class="dv">2</span>,</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> <span class="st">"skyblue"</span>,</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"black"</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">100</span>)) <span class="sc">+</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Distribution of Games per User"</span>,</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Number of Games Played"</span>,</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Frequency"</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="PSTAT-Final_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The histogram shows that most users played only a relatively small number of games, while a small group of users played substantially more games.</p>
+<p>The distribution is strongly right-skewed, with a long tail extending toward highly active users who interacted with dozens of games. This pattern indicates that user activity is highly uneven across the dataset and contributes to the sparsity of the user-item interaction matrix.</p>
+</section>
+<section id="distribution-of-users-per-game" class="level3">
+<h3 class="anchored" data-anchor-id="distribution-of-users-per-game">Distribution of Users per Game</h3>
+<p>Next, we examine how many users interacted with each game.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Number of users per game</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>users_per_game <span class="ot">&lt;-</span> steam_clean <span class="sc">%&gt;%</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(game_title) <span class="sc">%&gt;%</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">num_users =</span> <span class="fu">n</span>())</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Histogram</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(users_per_game, <span class="fu">aes</span>(<span class="at">x =</span> num_users)) <span class="sc">+</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">binwidth =</span> <span class="dv">5</span>,</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> <span class="st">"skyblue"</span>,</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"black"</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">300</span>)) <span class="sc">+</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Distribution of Users per Game"</span>,</span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Number of Users"</span>,</span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Frequency"</span></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="PSTAT-Final_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The histogram shows that most games were played by only a relatively small number of users, while a few highly popular games attracted substantially larger player bases.</p>
+<p>The distribution is highly right-skewed, indicating that user interactions are concentrated on a limited number of popular games. This long-tail pattern is common in recommendation system datasets and can contribute to popularity bias in collaborative filtering models.</p>
+<p>The exploratory analysis reveals strong sparsity and long-tail interaction patterns in the dataset. These characteristics motivate the use of collaborative filtering methods for the recommendation system.</p>
+</section>
+</section>
+<section id="item-based-recommendation-model" class="level2">
+<h2 class="anchored" data-anchor-id="item-based-recommendation-model">Item-Based Recommendation Model</h2>
+<p>The item-based recommendation model compares games to other games using user playtime behavior. Each game is represented as a vector of users, and each value in the vector is the transformed number of hours that user played the game. Games with similar playtime patterns across users are treated as similar items.</p>
+<p>The model does not use genre, developer, price, or tags. It only uses player behavior. Cosine similarity is used because it compares the shape of two playtime vectors instead of only comparing total playtime. This is useful for the Steam data because some users have extremely large playtime values.</p>
+<p>Before creating the matrix, <code>log1p(hours_played)</code> is used instead of raw playtime. This keeps larger playtimes meaningful while reducing the effect of extreme values.</p>
+<section id="build-the-item-user-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="build-the-item-user-matrix">Build the Item-User Matrix</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine repeated user-game rows and dampen very large playtime values</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>steam_model <span class="ot">&lt;-</span> steam_clean <span class="sc">%&gt;%</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(user_id, game_title) <span class="sc">%&gt;%</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">hours_played =</span> <span class="fu">sum</span>(hours_played), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">play_weight =</span> <span class="fu">log1p</span>(hours_played))</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>user_index <span class="ot">&lt;-</span> <span class="fu">factor</span>(steam_model<span class="sc">$</span>user_id)</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>game_index <span class="ot">&lt;-</span> <span class="fu">factor</span>(steam_model<span class="sc">$</span>game_title)</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Rows are games, columns are users, and values are transformed playtime.</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>item_user_matrix <span class="ot">&lt;-</span> <span class="fu">sparseMatrix</span>(</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">i =</span> <span class="fu">as.integer</span>(game_index),</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">j =</span> <span class="fu">as.integer</span>(user_index),</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> steam_model<span class="sc">$</span>play_weight,</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="fu">levels</span>(game_index), <span class="fu">levels</span>(user_index))</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Games in item-user matrix:"</span>, <span class="fu">nrow</span>(item_user_matrix), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Games in item-user matrix: 1583 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Users in item-user matrix:"</span>, <span class="fu">ncol</span>(item_user_matrix), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Users in item-user matrix: 3464 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Non-zero playtime entries:"</span>, <span class="fu">length</span>(item_user_matrix<span class="sc">@</span>x), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Non-zero playtime entries: 57632 </code></pre>
+</div>
+</div>
+<p>The matrix is sparse because most users played only a small fraction of the available games. A sparse matrix stores the non-zero playtime entries efficiently.</p>
+</section>
+<section id="cosine-similarity-function" class="level3">
+<h3 class="anchored" data-anchor-id="cosine-similarity-function">Cosine Similarity Function</h3>
+<p>The function below calculates cosine similarity between a selected game and every other game in the item-user matrix. It then returns the 10 games with the highest similarity scores.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>recommend_similar_games <span class="ot">&lt;-</span> <span class="cf">function</span>(target_game, item_matrix, <span class="at">n =</span> <span class="dv">10</span>) {</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>target_game <span class="sc">%in%</span> <span class="fu">rownames</span>(item_matrix)) {</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"This game title is not in the item-user matrix."</span>)</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  target_vector <span class="ot">&lt;-</span> item_matrix[target_game, , drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Compare the target game vector to all other game vectors.</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  dot_products <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(item_matrix <span class="sc">%*%</span> Matrix<span class="sc">::</span><span class="fu">t</span>(target_vector))</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>  item_norms <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(Matrix<span class="sc">::</span><span class="fu">rowSums</span>(item_matrix<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>  target_norm <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">sum</span>(target_vector<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>  similarity <span class="ot">&lt;-</span> dot_products <span class="sc">/</span> (item_norms <span class="sc">*</span> target_norm)</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>  similarity[<span class="sc">!</span><span class="fu">is.finite</span>(similarity)] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">game_title =</span> <span class="fu">rownames</span>(item_matrix),</span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">cosine_similarity =</span> similarity</span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(game_title <span class="sc">!=</span> target_game) <span class="sc">%&gt;%</span></span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(<span class="fu">desc</span>(cosine_similarity)) <span class="sc">%&gt;%</span></span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">slice_head</span>(<span class="at">n =</span> n)</span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="example-recommendation" class="level3">
+<h3 class="anchored" data-anchor-id="example-recommendation">Example Recommendation</h3>
+<p>For the example run, <code>Counter-Strike Global Offensive</code> is used because it is one of the major games in the dataset and appears among the highest-playtime games in the EDA. If that title is not available after filtering, the code uses the most-played game in the cleaned dataset.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>target_game <span class="ot">&lt;-</span> <span class="st">"Counter-Strike Global Offensive"</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span>target_game <span class="sc">%in%</span> <span class="fu">rownames</span>(item_user_matrix)) {</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  target_game <span class="ot">&lt;-</span> steam_clean <span class="sc">%&gt;%</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>(game_title, <span class="at">wt =</span> hours_played, <span class="at">name =</span> <span class="st">"total_hours"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(<span class="fu">desc</span>(total_hours)) <span class="sc">%&gt;%</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">slice</span>(<span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pull</span>(game_title)</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>item_based_recommendations <span class="ot">&lt;-</span> <span class="fu">recommend_similar_games</span>(</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">target_game =</span> target_game,</span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">item_matrix =</span> item_user_matrix,</span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">10</span></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Target game:"</span>, target_game, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Target game: Counter-Strike Global Offensive </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>item_based_recommendations <span class="sc">%&gt;%</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cosine_similarity =</span> <span class="fu">round</span>(cosine_similarity, <span class="dv">4</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Recommended Game"</span>, <span class="st">"Cosine Similarity"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Recommended Game</th>
+<th style="text-align: right;">Cosine Similarity</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Dota 2</td>
+<td style="text-align: right;">0.4354</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Team Fortress 2</td>
+<td style="text-align: right;">0.4151</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Garry’s Mod</td>
+<td style="text-align: right;">0.4140</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Counter-Strike Source</td>
+<td style="text-align: right;">0.3742</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PAYDAY 2</td>
+<td style="text-align: right;">0.3570</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Left 4 Dead 2</td>
+<td style="text-align: right;">0.3452</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Unturned</td>
+<td style="text-align: right;">0.3356</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Rust</td>
+<td style="text-align: right;">0.2942</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DayZ</td>
+<td style="text-align: right;">0.2870</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Counter-Strike</td>
+<td style="text-align: right;">0.2847</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The output can be read as games that were played by similar groups of users. A higher cosine similarity means the two games have more similar playtime patterns.</p>
+</section>
+<section id="checking-several-target-games" class="level3">
+<h3 class="anchored" data-anchor-id="checking-several-target-games">Checking Several Target Games</h3>
+<p>The model is also checked with several target games to make sure the function works beyond one example title.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>test_games <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Counter-Strike Global Offensive"</span>,</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Dota 2"</span>,</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Team Fortress 2"</span>,</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Portal 2"</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>available_test_games <span class="ot">&lt;-</span> test_games[test_games <span class="sc">%in%</span> <span class="fu">rownames</span>(item_user_matrix)]</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>similar_game_check <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(available_test_games, <span class="cf">function</span>(game) {</span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">recommend_similar_games</span>(game, item_user_matrix, <span class="at">n =</span> <span class="dv">5</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">target_game =</span> game, <span class="at">.before =</span> <span class="dv">1</span>)</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>similar_game_check <span class="sc">%&gt;%</span></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cosine_similarity =</span> <span class="fu">round</span>(cosine_similarity, <span class="dv">4</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Target Game"</span>, <span class="st">"Recommended Game"</span>, <span class="st">"Cosine Similarity"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 39%">
+<col style="width: 39%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Target Game</th>
+<th style="text-align: left;">Recommended Game</th>
+<th style="text-align: right;">Cosine Similarity</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Counter-Strike Global Offensive</td>
+<td style="text-align: left;">Dota 2</td>
+<td style="text-align: right;">0.4354</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Counter-Strike Global Offensive</td>
+<td style="text-align: left;">Team Fortress 2</td>
+<td style="text-align: right;">0.4151</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Counter-Strike Global Offensive</td>
+<td style="text-align: left;">Garry’s Mod</td>
+<td style="text-align: right;">0.4140</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Counter-Strike Global Offensive</td>
+<td style="text-align: left;">Counter-Strike Source</td>
+<td style="text-align: right;">0.3742</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Counter-Strike Global Offensive</td>
+<td style="text-align: left;">PAYDAY 2</td>
+<td style="text-align: right;">0.3570</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Dota 2</td>
+<td style="text-align: left;">Counter-Strike Global Offensive</td>
+<td style="text-align: right;">0.4354</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Dota 2</td>
+<td style="text-align: left;">Team Fortress 2</td>
+<td style="text-align: right;">0.3276</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Dota 2</td>
+<td style="text-align: left;">Left 4 Dead 2</td>
+<td style="text-align: right;">0.2900</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Dota 2</td>
+<td style="text-align: left;">PAYDAY 2</td>
+<td style="text-align: right;">0.2419</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Dota 2</td>
+<td style="text-align: left;">Warframe</td>
+<td style="text-align: right;">0.2200</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Team Fortress 2</td>
+<td style="text-align: left;">Garry’s Mod</td>
+<td style="text-align: right;">0.4747</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Team Fortress 2</td>
+<td style="text-align: left;">Left 4 Dead 2</td>
+<td style="text-align: right;">0.4625</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Team Fortress 2</td>
+<td style="text-align: left;">Counter-Strike Global Offensive</td>
+<td style="text-align: right;">0.4151</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Team Fortress 2</td>
+<td style="text-align: left;">Unturned</td>
+<td style="text-align: right;">0.3882</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Team Fortress 2</td>
+<td style="text-align: left;">Portal 2</td>
+<td style="text-align: right;">0.3474</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Portal 2</td>
+<td style="text-align: left;">Portal</td>
+<td style="text-align: right;">0.5573</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Portal 2</td>
+<td style="text-align: left;">Left 4 Dead 2</td>
+<td style="text-align: right;">0.3775</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Portal 2</td>
+<td style="text-align: left;">Half-Life 2</td>
+<td style="text-align: right;">0.3742</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Portal 2</td>
+<td style="text-align: left;">Borderlands 2</td>
+<td style="text-align: right;">0.3502</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Portal 2</td>
+<td style="text-align: left;">Team Fortress 2</td>
+<td style="text-align: right;">0.3474</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>This model is useful when a player already has one game in mind and wants similar games. A limitation is that popular games can appear often because they overlap with many user histories. The model also cannot recommend brand-new games with no interaction history.</p>
+<p>This item-based model covers the game-to-game recommendation question. The next section uses the same cleaned interaction matrix for user-to-game recommendations.</p>
+</section>
+</section>
+<section id="user-based-recommendation-model" class="level2">
+<h2 class="anchored" data-anchor-id="user-based-recommendation-model">User-Based Recommendation Model</h2>
+<p>Next is the user-based recommendation model. The main concept for this model is to recommend games based on a chosen user’s past history. To do this, we use the target user’s playtime pattern to find similar users in the Steam dataset. These similar users, or neighbors, spent time on some of the same games as the target user, so their other games can be used as possible recommendations.</p>
+<p>Like the item-based recommendation model, this model uses only player behavior. If another user played many of the same games as the target user and had a similar pattern of transformed playtime values, that user receives a higher cosine similarity score. This makes the method consistent with the collaborative filtering approach from the lecture slides.</p>
+<p>We first transposed the user-item matrix created previously so that the rows are for users and the columns are for games. This is to keep the similarity function the same as from the previous model in order to output cosine similarity scores of similar users.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Matrix Transposition (User IDs x Game Titles)</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>user_item_matrix <span class="ot">&lt;-</span> <span class="fu">t</span>(item_user_matrix)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="similar-users" class="level3">
+<h3 class="anchored" data-anchor-id="similar-users">Similar Users</h3>
+<p>We take the same cosine similarity idea from the item-based model, but this time we apply user-based collaborative filtering by comparing a chosen target user with the other user vectors. By default, this returns the top 10 nearest neighbors along with their calculated cosine similarity scores.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Function for Similar Users</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>similar_users <span class="ot">&lt;-</span> <span class="cf">function</span>(target_user, user_matrix, <span class="at">n =</span> <span class="dv">10</span>) {</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>target_user <span class="sc">%in%</span> <span class="fu">rownames</span>(user_matrix)) {</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"This user ID is not in the user-item matrix."</span>)</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>  target_vector <span class="ot">&lt;-</span> user_matrix[target_user, , drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>  dot_products <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(user_matrix <span class="sc">%*%</span> Matrix<span class="sc">::</span><span class="fu">t</span>(target_vector))</span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>  user_norms <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(Matrix<span class="sc">::</span><span class="fu">rowSums</span>(user_matrix<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>  target_norm <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">sum</span>(target_vector<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>  similarity <span class="ot">&lt;-</span> dot_products <span class="sc">/</span> (user_norms <span class="sc">*</span> target_norm)</span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>  similarity[<span class="sc">!</span><span class="fu">is.finite</span>(similarity)] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(similarity) <span class="ot">&lt;-</span> <span class="fu">rownames</span>(user_matrix)</span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>  users <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">user_id =</span> <span class="fu">rownames</span>(user_matrix), <span class="at">cosine_similarity =</span> similarity) <span class="sc">%&gt;%</span></span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(user_id <span class="sc">!=</span> target_user) <span class="sc">%&gt;%</span></span>
+<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(<span class="fu">desc</span>(cosine_similarity)) <span class="sc">%&gt;%</span></span>
+<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">slice_head</span>(<span class="at">n =</span> n)</span>
+<span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(users)</span>
+<span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>To test the user similarity function, we use <code>62990992</code> as the ID of our target user because this user has many interactions in the cleaned Steam dataset.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Chosen User ID</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>target_user <span class="ot">&lt;-</span> <span class="st">"62990992"</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Similarity Function</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>similar_community <span class="ot">&lt;-</span> <span class="fu">similar_users</span>(target_user, user_item_matrix, <span class="at">n =</span> <span class="dv">10</span>)</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Similar Users for User ID:"</span>, target_user, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>); similar_community <span class="sc">%&gt;%</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cosine_similarity =</span> <span class="fu">round</span>(cosine_similarity, <span class="dv">4</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Similar User"</span>, <span class="st">"Cosine Similarity"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Similar Users for User ID: 62990992 </code></pre>
+</div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Similar User</th>
+<th style="text-align: right;">Cosine Similarity</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">975449</td>
+<td style="text-align: right;">0.3865</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">11403772</td>
+<td style="text-align: right;">0.3816</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">122026623</td>
+<td style="text-align: right;">0.3648</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">21061921</td>
+<td style="text-align: right;">0.3509</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">116876958</td>
+<td style="text-align: right;">0.3414</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">49893565</td>
+<td style="text-align: right;">0.3411</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">69009454</td>
+<td style="text-align: right;">0.3363</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">48525807</td>
+<td style="text-align: right;">0.3193</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">24469287</td>
+<td style="text-align: right;">0.3147</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">65398650</td>
+<td style="text-align: right;">0.3129</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>This output shows 10 IDs of the most similar players in the community who spent a similar amount of time on the same games as <code>62990992</code>. This time, a higher cosine similarity implies two users who have more similar playtime patterns between each other in the same games. But we are not done yet, as this is a user-to-user similarity model. Since we are recommending games to a particular user, we also want to find different games that the neighbors in the community can recommend to that particular user.</p>
+</section>
+<section id="game-recommendations-from-similar-users" class="level3">
+<h3 class="anchored" data-anchor-id="game-recommendations-from-similar-users">Game Recommendations from Similar Users</h3>
+<p>We then create another function to recommend games based on the neighbors’ other game interests. The recommendation score is calculated using a similarity-weighted average of neighbor playtime weights. After applying the similarity function, we also identify the games that the target user has already played. Those games are removed from the recommendation list because recommending something the user already played would not be useful. By default, this returns the top 10 recommended games.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Function for Game Recommendations by Neighbors</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>recommend_games_by_user <span class="ot">&lt;-</span> <span class="cf">function</span>(target_user, user_matrix, k, <span class="at">n =</span> <span class="dv">10</span>) {</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  recommended_users <span class="ot">&lt;-</span> <span class="fu">similar_users</span>(target_user, user_matrix, <span class="at">n =</span> k)</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  played_games <span class="ot">&lt;-</span> <span class="fu">names</span>(<span class="fu">which</span>(user_matrix[target_user, ] <span class="sc">&gt;</span> <span class="dv">0</span>))</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>  score <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">0</span>, <span class="fu">ncol</span>(user_matrix))</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>  sim_total <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">0</span>, <span class="fu">ncol</span>(user_matrix))</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(score) <span class="ot">&lt;-</span> <span class="fu">colnames</span>(user_matrix)</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(sim_total) <span class="ot">&lt;-</span> <span class="fu">colnames</span>(user_matrix)</span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(<span class="fu">nrow</span>(recommended_users))) {</span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>    neighbor <span class="ot">&lt;-</span> recommended_users<span class="sc">$</span>user_id[i]</span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>    similarity <span class="ot">&lt;-</span> recommended_users<span class="sc">$</span>cosine_similarity[i]</span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a>    neighbor_vector <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(user_matrix[neighbor, ])</span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>    score <span class="ot">&lt;-</span> score <span class="sc">+</span> similarity <span class="sc">*</span> neighbor_vector</span>
+<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a>    sim_total <span class="ot">&lt;-</span> sim_total <span class="sc">+</span> similarity <span class="sc">*</span> <span class="fu">as.numeric</span>(neighbor_vector <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a>  score <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(sim_total <span class="sc">&gt;</span> <span class="dv">0</span>, score <span class="sc">/</span> sim_total, <span class="dv">0</span>)</span>
+<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a>  score[played_games] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-22"><a href="#cb42-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="at">game_title =</span> <span class="fu">names</span>(score), <span class="at">rec_score =</span> score) <span class="sc">%&gt;%</span></span>
+<span id="cb42-23"><a href="#cb42-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(<span class="fu">desc</span>(rec_score)) <span class="sc">%&gt;%</span></span>
+<span id="cb42-24"><a href="#cb42-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">slice_head</span>(<span class="at">n =</span> n)</span>
+<span id="cb42-25"><a href="#cb42-25" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>To run this, let’s take <code>62990992</code> as the target user ID again, but this time, we increase the number of neighbors (k) to 50 for wider results of different games to recommend.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>target_user <span class="ot">&lt;-</span> <span class="st">"62990992"</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Game Recommendation Function</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>user_based_recommendations <span class="ot">&lt;-</span> <span class="fu">recommend_games_by_user</span>(<span class="at">target_user =</span> target_user,</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>                                                      <span class="at">user_matrix =</span> user_item_matrix,</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>                                                      <span class="at">k =</span> <span class="dv">50</span>, <span class="at">n =</span> <span class="dv">10</span>)</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Recommendations for User ID:"</span>, target_user, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>); user_based_recommendations <span class="sc">%&gt;%</span></span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">rec_score =</span> <span class="fu">round</span>(rec_score, <span class="dv">4</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Recommended Game"</span>, <span class="st">"Recommendation Score"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Recommendations for User ID: 62990992 </code></pre>
+</div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Recommended Game</th>
+<th style="text-align: right;">Recommendation Score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Football Manager 2014</td>
+<td style="text-align: right;">6.3665</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Might &amp; Magic Duel of Champions</td>
+<td style="text-align: right;">6.2323</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Football Manager 2013</td>
+<td style="text-align: right;">5.7777</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Pro Evolution Soccer 2015</td>
+<td style="text-align: right;">5.1533</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">NBA 2K14</td>
+<td style="text-align: right;">5.0938</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">NBA 2K15</td>
+<td style="text-align: right;">5.0938</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Football Manager 2015</td>
+<td style="text-align: right;">4.9767</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Champions Online</td>
+<td style="text-align: right;">4.7151</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Call of Duty Modern Warfare 3 - Multiplayer</td>
+<td style="text-align: right;">4.6019</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">The Binding of Isaac Rebirth</td>
+<td style="text-align: right;">4.5689</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The output highlights games that similar users spent meaningful time playing, while excluding games already played by the target user. A higher score means that similar users had stronger transformed playtime values for that game.</p>
+</section>
+<section id="checking-several-target-users" class="level3">
+<h3 class="anchored" data-anchor-id="checking-several-target-users">Checking Several Target Users</h3>
+<p>Like the item-based model, we can also test the user-based model with other users so that the recommender system is not only demonstrated on one user ID.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>test_users <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"62990992"</span>, <span class="st">"11403772"</span>, <span class="st">"49893565"</span>, <span class="st">"47457723"</span>)</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>available_test_users <span class="ot">&lt;-</span> test_users[test_users <span class="sc">%in%</span> <span class="fu">rownames</span>(user_item_matrix)]</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>similar_user_check <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(available_test_users, <span class="cf">function</span>(user_id) {</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">recommend_games_by_user</span>(user_id, user_item_matrix, <span class="at">k =</span> <span class="dv">50</span>, <span class="at">n =</span> <span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">target_user =</span> user_id, <span class="at">.before =</span> <span class="dv">1</span>)</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>similar_user_check <span class="sc">%&gt;%</span></span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">rec_score =</span> <span class="fu">round</span>(rec_score, <span class="dv">4</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Target User"</span>, <span class="st">"Recommended Game"</span>, <span class="st">"Recommendation Score"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 57%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Target User</th>
+<th style="text-align: left;">Recommended Game</th>
+<th style="text-align: right;">Recommendation Score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">62990992</td>
+<td style="text-align: left;">Football Manager 2014</td>
+<td style="text-align: right;">6.3665</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">62990992</td>
+<td style="text-align: left;">Might &amp; Magic Duel of Champions</td>
+<td style="text-align: right;">6.2323</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">62990992</td>
+<td style="text-align: left;">Football Manager 2013</td>
+<td style="text-align: right;">5.7777</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">62990992</td>
+<td style="text-align: left;">Pro Evolution Soccer 2015</td>
+<td style="text-align: right;">5.1533</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">62990992</td>
+<td style="text-align: left;">NBA 2K14</td>
+<td style="text-align: right;">5.0938</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">62990992</td>
+<td style="text-align: left;">NBA 2K15</td>
+<td style="text-align: right;">5.0938</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">62990992</td>
+<td style="text-align: left;">Football Manager 2015</td>
+<td style="text-align: right;">4.9767</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">62990992</td>
+<td style="text-align: left;">Champions Online</td>
+<td style="text-align: right;">4.7151</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">62990992</td>
+<td style="text-align: left;">Call of Duty Modern Warfare 3 - Multiplayer</td>
+<td style="text-align: right;">4.6019</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">62990992</td>
+<td style="text-align: left;">The Binding of Isaac Rebirth</td>
+<td style="text-align: right;">4.5689</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">11403772</td>
+<td style="text-align: left;">Age of Empires Online</td>
+<td style="text-align: right;">5.1299</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">11403772</td>
+<td style="text-align: left;">Total War ROME II - Emperor Edition</td>
+<td style="text-align: right;">4.8573</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">11403772</td>
+<td style="text-align: left;">Dragon Age Origins</td>
+<td style="text-align: right;">4.6540</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">11403772</td>
+<td style="text-align: left;">Castlevania Lords of Shadow 2</td>
+<td style="text-align: right;">4.3041</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">11403772</td>
+<td style="text-align: left;">Dragon Nest Europe</td>
+<td style="text-align: right;">4.2114</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">11403772</td>
+<td style="text-align: left;">Pillars of Eternity</td>
+<td style="text-align: right;">4.1701</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">11403772</td>
+<td style="text-align: left;">Rocksmith 2014</td>
+<td style="text-align: right;">4.0254</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">11403772</td>
+<td style="text-align: left;">Call of Duty Modern Warfare 3 - Multiplayer</td>
+<td style="text-align: right;">4.0035</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">11403772</td>
+<td style="text-align: left;">S.T.A.L.K.E.R. Clear Sky</td>
+<td style="text-align: right;">3.8712</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">11403772</td>
+<td style="text-align: left;">Elite Dangerous</td>
+<td style="text-align: right;">3.8501</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">49893565</td>
+<td style="text-align: left;">Might &amp; Magic Duel of Champions</td>
+<td style="text-align: right;">6.2033</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">49893565</td>
+<td style="text-align: left;">Assassin’s Creed Revelations</td>
+<td style="text-align: right;">5.7961</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">49893565</td>
+<td style="text-align: left;">Champions Online</td>
+<td style="text-align: right;">5.3706</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">49893565</td>
+<td style="text-align: left;">Wargame AirLand Battle</td>
+<td style="text-align: right;">4.6913</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">49893565</td>
+<td style="text-align: left;">Fallout Tactics</td>
+<td style="text-align: right;">4.3438</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">49893565</td>
+<td style="text-align: left;">FINAL FANTASY XIV A Realm Reborn</td>
+<td style="text-align: right;">4.3227</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">49893565</td>
+<td style="text-align: left;">S.T.A.L.K.E.R. Clear Sky</td>
+<td style="text-align: right;">4.2341</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">49893565</td>
+<td style="text-align: left;">Aliens Colonial Marines</td>
+<td style="text-align: right;">4.0431</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">49893565</td>
+<td style="text-align: left;">Pillars of Eternity</td>
+<td style="text-align: right;">3.8593</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">49893565</td>
+<td style="text-align: left;">Wings of Prey</td>
+<td style="text-align: right;">3.8501</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">47457723</td>
+<td style="text-align: left;">Might &amp; Magic Duel of Champions</td>
+<td style="text-align: right;">6.4892</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">47457723</td>
+<td style="text-align: left;">Blood Bowl 2</td>
+<td style="text-align: right;">5.2575</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">47457723</td>
+<td style="text-align: left;">Age of Empires Online</td>
+<td style="text-align: right;">5.0434</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">47457723</td>
+<td style="text-align: left;">Dragon Age II</td>
+<td style="text-align: right;">5.0370</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">47457723</td>
+<td style="text-align: left;">Champions Online</td>
+<td style="text-align: right;">4.4543</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">47457723</td>
+<td style="text-align: left;">Puzzle Quest</td>
+<td style="text-align: right;">4.3567</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">47457723</td>
+<td style="text-align: left;">DARK SOULS II</td>
+<td style="text-align: right;">4.3327</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">47457723</td>
+<td style="text-align: left;">Clicker Heroes</td>
+<td style="text-align: right;">4.2873</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">47457723</td>
+<td style="text-align: left;">Spiral Knights</td>
+<td style="text-align: right;">4.2627</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">47457723</td>
+<td style="text-align: left;">The Witcher 3 Wild Hunt</td>
+<td style="text-align: right;">4.2547</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>This user-to-game model is useful for suggesting games a player has not tried yet, using interactions from a wider community that plays some of the same games. The same limitation applies: popular games can still appear frequently in recommendations, and brand-new games are hard to recommend because they do not have interaction history yet. Still, this model gives a practical way to turn past Steam behavior into personalized game suggestions.</p>
+</section>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>This project shows that collaborative filtering can be used to build a Steam game recommendation system from user behavior alone. After cleaning the original 200,000-row dataset, the analysis focused on play behavior because playtime gives a stronger signal of interest than purchase records alone. The EDA showed a right-skewed dataset where a small number of games and users account for a large share of activity, so inactive users and unpopular games were filtered before modeling.</p>
+<p>The final recommender system includes two models. The item-based model compares games based on shared player behavior and returns similar games for a selected title. The user-based model finds similar users, scores games from those neighbors, and removes games the target user already played.</p>
+<p>The main limitation is that the system relies only on past interactions. This can favor popular games and makes brand-new games difficult to recommend. A stronger future version could combine collaborative filtering with Steam metadata such as genre, tags, reviews, or release year. Even with these limits, the models turn the Steam dataset into practical item-to-item and user-to-item recommendations.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
